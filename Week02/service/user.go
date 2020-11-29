@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"strconv"
-	"week02/dao"
+	"week02/internal/dao"
 )
 
 type Resp struct {
@@ -15,7 +15,15 @@ type Resp struct {
 	err  error
 }
 
-func FindUser(ctx *gin.Context) {
+type userService struct {
+	dao.UserDao
+}
+
+func New() *userService {
+	return &userService{}
+}
+
+func (srv *userService) FindUser(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(200, Resp{
@@ -24,14 +32,13 @@ func FindUser(ctx *gin.Context) {
 		})
 		return
 	}
-	u, err := dao.FindUserById(id)
+	u, err := srv.FindUserById(id)
 	r := Resp{
 		msg:  u,
 		err:  err,
 		code: 200,
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		log.Printf("%+v", err)
 		r.code = 404
 	} else if err != nil {
 		log.Printf("%+v", err)

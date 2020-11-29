@@ -7,11 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 	"week02/api/http"
-	"week02/dao"
+	"week02/internal/model"
 )
 
 func main() {
-	err := dao.Init()
+	err := model.Init()
 	if err != nil {
 		log.Fatalf("%+v", err)
 	}

@@ -7,10 +7,10 @@ import (
 
 func Route() *gin.Engine {
 	r := gin.New()
-
-	userGroup := r.Group("/users")
 	{
-		userGroup.GET("/:id", service.FindUser)
+		userSrv := service.New()
+		userGroup := r.Group("/users")
+		userGroup.GET("/:id", userSrv.FindUser)
 	}
 
 	return r
