@@ -12,15 +12,24 @@ import (
 	"time"
 )
 
+func serveApp(ctx context.Context, quit chan struct{}) error {
 
-func serveApp(ctx context.Context) error {
-	srv := http.Server{Addr: ":8081"}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/alive", func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(time.Second * 5)
+		_, _ = w.Write([]byte("Hello Golang!"))
+	})
+	srv := http.Server{Addr: ":8081", Handler: mux}
 
 	go func() {
+		defer close(quit)
 		<-ctx.Done()
-		ctx, cancelFunc := context.WithTimeout(ctx, time.Second*2)
+		ctx, cancelFunc := context.WithTimeout(context.Background(), time.Second*10) // 不要用传来的ctx
 		defer cancelFunc()
-		_ = srv.Shutdown(ctx)
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("srv shutdown fail: %+v", err)
+			return
+		}
 		log.Println("graceful shutdown")
 	}()
 	return srv.ListenAndServe()
@@ -41,9 +50,9 @@ func main() {
 	ctx, fc := context.WithCancel(context.Background())
 
 	g, _ := errgroup.WithContext(ctx)
-
+	quit := make(chan struct{})
 	g.Go(func() error {
-		if err := serveApp(ctx); err != nil {
+		if err := serveApp(ctx, quit); err != nil {
 			fc()
 			return err
 		}
@@ -59,7 +68,7 @@ func main() {
 	})
 
 	if err := g.Wait(); err != nil {
-		log.Println("exit after 2 seconds")
+		log.Printf("%+v", err)
 	}
-	<-time.After(time.Second * 2)
+	<-quit
 }
