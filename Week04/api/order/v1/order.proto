@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package api.order.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "week04/api/order/v1;order";
+
+service OrderService {
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse) {
+    option (google.api.http) = {
+      get: "/v1/orders",
+    };
+  };
+}
+
+message ListOrdersRequest {
+  uint32 limit = 1;
+  uint64 page = 2;
+}
+
+message OrderResponse {
+  uint64 id = 1;
+  string name = 2;
+  uint64 price = 3;
+}
+
+message ListOrdersResponse {
+  repeated OrderResponse rows = 1;
+  uint64 count = 2;
+}
